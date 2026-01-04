@@ -12,7 +12,6 @@ namespace AudioPitchShifter
         private SoundTouchInterop? _soundTouch;
         private WaveFormat _waveFormat;
         private float _pitchSemiTones = 0;
-        private int _latencyMs = 50;
         private readonly object _lockObject = new object();
         private bool _isProcessing = false;
 
@@ -23,23 +22,20 @@ namespace AudioPitchShifter
             _waveFormat = new WaveFormat(44100, 16, 2);
         }
 
-        public void Initialize(int inputDeviceNumber, int outputDeviceNumber, int latencyMs)
+        public void Initialize(int inputDeviceNumber, int outputDeviceNumber)
         {
             Stop();
-
-            _latencyMs = latencyMs;
 
             _soundTouch = new SoundTouchInterop();
             _soundTouch.Initialize((uint)_waveFormat.SampleRate, (uint)_waveFormat.Channels);
             _soundTouch.SetPitchSemiTonesChange(_pitchSemiTones);
 
-            int bufferMs = Math.Max(20, _latencyMs / 2);
-
+            // Optimized for low latency: 20ms input buffer, 50ms output buffer
             _waveIn = new WaveInEvent
             {
                 DeviceNumber = inputDeviceNumber,
                 WaveFormat = _waveFormat,
-                BufferMilliseconds = bufferMs
+                BufferMilliseconds = 20  // Minimum practical buffer size
             };
 
             _bufferedWaveProvider = new BufferedWaveProvider(_waveFormat)
@@ -51,7 +47,7 @@ namespace AudioPitchShifter
             _waveOut = new WaveOutEvent
             {
                 DeviceNumber = outputDeviceNumber,
-                DesiredLatency = _latencyMs
+                DesiredLatency = 50  // Low latency output
             };
 
             _waveIn.DataAvailable += OnDataAvailable;
@@ -65,24 +61,26 @@ namespace AudioPitchShifter
 
             try
             {
+                int samplesRecorded = e.BytesRecorded / 2;
+                float[] floatSamples = new float[samplesRecorded];
+
+                // Convert samples outside the lock
+                for (int i = 0; i < samplesRecorded; i++)
+                {
+                    short sample = BitConverter.ToInt16(e.Buffer, i * 2);
+                    floatSamples[i] = sample / 32768f;
+                }
+
+                // Calculate level outside the lock
+                float level = 0;
+                if (floatSamples.Length > 0)
+                {
+                    level = floatSamples.Max(Math.Abs);
+                }
+
+                // Process audio with minimal lock time
                 lock (_lockObject)
                 {
-                    int samplesRecorded = e.BytesRecorded / 2;
-                    float[] floatSamples = new float[samplesRecorded];
-
-                    for (int i = 0; i < samplesRecorded; i++)
-                    {
-                        short sample = BitConverter.ToInt16(e.Buffer, i * 2);
-                        floatSamples[i] = sample / 32768f;
-                    }
-
-                    float level = 0;
-                    if (floatSamples.Length > 0)
-                    {
-                        level = floatSamples.Max(Math.Abs);
-                    }
-                    AudioLevelUpdated?.Invoke(this, level);
-
                     uint numSamples = (uint)(samplesRecorded / _waveFormat.Channels);
                     _soundTouch.Process(floatSamples, numSamples);
 
@@ -107,6 +105,9 @@ namespace AudioPitchShifter
                         }
                     }
                 }
+
+                // Invoke event outside the lock to prevent UI thread blocking
+                AudioLevelUpdated?.Invoke(this, level);
             }
             catch (Exception ex)
             {

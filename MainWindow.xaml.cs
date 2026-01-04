@@ -77,24 +77,13 @@ namespace AudioPitchShifter
             }
         }
 
-        private void LatencySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (LatencyValueText != null)
-            {
-                int value = (int)e.NewValue;
-                LatencyValueText.Text = $"{value} ms";
-            }
-        }
-
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                int latencyMs = (int)LatencySlider.Value;
-
                 _audioProcessor = new AudioProcessor();
                 _audioProcessor.AudioLevelUpdated += AudioProcessor_AudioLevelUpdated;
-                _audioProcessor.Initialize(_selectedInputDevice, _selectedOutputDevice, latencyMs);
+                _audioProcessor.Initialize(_selectedInputDevice, _selectedOutputDevice);
                 _audioProcessor.SetPitchSemiTones((float)PitchSlider.Value);
                 _audioProcessor.Start();
 
@@ -102,9 +91,8 @@ namespace AudioPitchShifter
                 StopButton.IsEnabled = true;
                 InputDeviceComboBox.IsEnabled = false;
                 OutputDeviceComboBox.IsEnabled = false;
-                LatencySlider.IsEnabled = false;
 
-                StatusText.Text = $"Processing audio (Pitch: {PitchSlider.Value:+0;-0} semitones, Latency: {latencyMs}ms)";
+                StatusText.Text = $"Processing audio (Pitch: {PitchSlider.Value:+0;-0} semitones)";
 
                 _uiUpdateTimer?.Start();
             }
@@ -144,7 +132,6 @@ namespace AudioPitchShifter
             StopButton.IsEnabled = false;
             InputDeviceComboBox.IsEnabled = true;
             OutputDeviceComboBox.IsEnabled = true;
-            LatencySlider.IsEnabled = true;
             AudioLevelBar.Value = 0;
 
             StatusText.Text = "Ready";

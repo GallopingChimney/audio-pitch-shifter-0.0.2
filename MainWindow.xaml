@@ -12,8 +12,6 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -24,7 +22,7 @@
         <ComboBox Grid.Row="3" x:Name="OutputDeviceComboBox" Margin="0,0,0,15" SelectionChanged="OutputDeviceComboBox_SelectionChanged"/>
 
         <TextBlock Grid.Row="4" Text="Pitch Shift (Semitones):" FontWeight="Bold" Margin="0,0,0,5"/>
-        <Grid Grid.Row="5" Margin="0,0,0,15">
+        <Grid Grid.Row="5" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -49,33 +47,7 @@
                        TextAlignment="Right"/>
         </Grid>
 
-        <TextBlock Grid.Row="6" Text="Latency (ms):" FontWeight="Bold" Margin="0,0,0,5"/>
-        <Grid Grid.Row="7" Margin="0,0,0,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <Slider x:Name="LatencySlider"
-                    Grid.Column="0"
-                    Minimum="20"
-                    Maximum="200"
-                    Value="50"
-                    TickFrequency="10"
-                    IsSnapToTickEnabled="True"
-                    TickPlacement="BottomRight"
-                    ValueChanged="LatencySlider_ValueChanged"
-                    Margin="0,0,10,0"/>
-            <TextBlock Grid.Column="1"
-                       x:Name="LatencyValueText"
-                       Text="50 ms"
-                       FontWeight="Bold"
-                       FontSize="16"
-                       VerticalAlignment="Center"
-                       MinWidth="60"
-                       TextAlignment="Right"/>
-        </Grid>
-
-        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
             <Button x:Name="StartButton"
                     Content="Start"
                     Width="100"
@@ -90,7 +62,7 @@
                     Click="StopButton_Click"/>
         </StackPanel>
 
-        <Border Grid.Row="9"
+        <Border Grid.Row="7"
                 BorderBrush="Gray"
                 BorderThickness="1"
                 CornerRadius="5"
@@ -115,7 +87,7 @@
                     2. Select your output device (speakers or VB-Audio Cable)
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
-                    3. Adjust pitch and latency (lower = faster response)
+                    3. Adjust pitch in semitone intervals (-12 to +12)
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap">
                     4. Click Start to begin real-time processing
