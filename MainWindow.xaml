@@ -23,11 +23,8 @@
         <TextBlock Grid.Row="2" Text="Audio Output Device:" FontWeight="Bold" Margin="0,0,0,5"/>
         <ComboBox Grid.Row="3" x:Name="OutputDeviceComboBox" Margin="0,0,0,15" SelectionChanged="OutputDeviceComboBox_SelectionChanged"/>
 
-        <TextBlock Grid.Row="4" Text="Latency Preset:" FontWeight="Bold" Margin="0,0,0,5"/>
-        <ComboBox Grid.Row="5" x:Name="LatencyPresetComboBox" Margin="0,0,0,15" SelectionChanged="LatencyPresetComboBox_SelectionChanged"/>
-
-        <TextBlock Grid.Row="6" Text="Pitch Shift (Semitones):" FontWeight="Bold" Margin="0,0,0,5"/>
-        <Grid Grid.Row="7" Margin="0,0,0,20">
+        <TextBlock Grid.Row="4" Text="Pitch Shift (Semitones):" FontWeight="Bold" Margin="0,0,0,5"/>
+        <Grid Grid.Row="5" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -42,17 +39,24 @@
                     TickPlacement="BottomRight"
                     ValueChanged="PitchSlider_ValueChanged"
                     Margin="0,0,10,0"/>
-            <TextBlock Grid.Column="1"
-                       x:Name="PitchValueText"
-                       Text="0"
-                       FontWeight="Bold"
-                       FontSize="16"
-                       VerticalAlignment="Center"
-                       MinWidth="40"
-                       TextAlignment="Right"/>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock x:Name="PitchValueText"
+                           Text="0"
+                           FontWeight="Bold"
+                           FontSize="16"
+                           MinWidth="80"
+                           TextAlignment="Right"/>
+                <TextBlock x:Name="MusicalNotationText"
+                           Text="E"
+                           FontWeight="Normal"
+                           FontSize="12"
+                           MinWidth="80"
+                           TextAlignment="Right"
+                           Foreground="Gray"/>
+            </StackPanel>
         </Grid>
 
-        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
             <Button x:Name="StartButton"
                     Content="Start"
                     Width="100"
@@ -67,7 +71,7 @@
                     Click="StopButton_Click"/>
         </StackPanel>
 
-        <Border Grid.Row="9"
+        <Border Grid.Row="7"
                 BorderBrush="Gray"
                 BorderThickness="1"
                 CornerRadius="5"

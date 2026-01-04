@@ -11,15 +11,14 @@ namespace AudioPitchShifter
         private AudioProcessor? _audioProcessor;
         private int _selectedInputDevice = 0;
         private int _selectedOutputDevice = 0;
-        private LatencyPreset[] _latencyPresets = Array.Empty<LatencyPreset>();
-        private LatencyPreset _selectedLatencyPreset = null!;
+        private readonly LatencyPreset _lowLatencyPreset = new LatencyPreset("Low", 10, 50, "Fast response");
         private System.Windows.Threading.DispatcherTimer? _uiUpdateTimer;
+        private int _currentPitchSemitones = 0;
 
         public MainWindow()
         {
             InitializeComponent();
             LoadAudioDevices();
-            LoadLatencyPresets();
 
             _uiUpdateTimer = new System.Windows.Threading.DispatcherTimer
             {
@@ -30,6 +29,7 @@ namespace AudioPitchShifter
 
         private void UiUpdateTimer_Tick(object? sender, EventArgs e)
         {
+            UpdateStatusText();
         }
 
         private void LoadAudioDevices()
@@ -59,20 +59,6 @@ namespace AudioPitchShifter
             }
         }
 
-        private void LoadLatencyPresets()
-        {
-            _latencyPresets = LatencyPreset.GetPresets();
-            LatencyPresetComboBox.Items.Clear();
-
-            foreach (var preset in _latencyPresets)
-            {
-                LatencyPresetComboBox.Items.Add(preset);
-            }
-
-            // Select "Low" by default (index 0)
-            LatencyPresetComboBox.SelectedIndex = 0;
-            _selectedLatencyPreset = _latencyPresets[0];
-        }
 
         private void InputDeviceComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -84,22 +70,44 @@ namespace AudioPitchShifter
             _selectedOutputDevice = OutputDeviceComboBox.SelectedIndex - 1;
         }
 
-        private void LatencyPresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (LatencyPresetComboBox.SelectedIndex >= 0)
-            {
-                _selectedLatencyPreset = _latencyPresets[LatencyPresetComboBox.SelectedIndex];
-            }
-        }
-
         private void PitchSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (PitchValueText != null)
             {
-                int value = (int)e.NewValue;
-                PitchValueText.Text = value >= 0 ? $"+{value}" : value.ToString();
+                _currentPitchSemitones = (int)e.NewValue;
+                PitchValueText.Text = _currentPitchSemitones >= 0 ? $"+{_currentPitchSemitones}" : _currentPitchSemitones.ToString();
 
-                _audioProcessor?.SetPitchSemiTones((float)value);
+                if (MusicalNotationText != null)
+                {
+                    MusicalNotationText.Text = GetMusicalNotation(_currentPitchSemitones);
+                }
+
+                _audioProcessor?.SetPitchSemiTones((float)_currentPitchSemitones);
+                UpdateStatusText();
+            }
+        }
+
+        private string GetMusicalNotation(int semitones)
+        {
+            // E is the default (0 semitones)
+            // Notes in chromatic scale starting from E
+            string[] notes = { "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B", "C", "C♯/D♭", "D", "D♯/E♭" };
+
+            // Calculate the note index (handle negative values)
+            int noteIndex = semitones % 12;
+            if (noteIndex < 0)
+                noteIndex += 12;
+
+            return notes[noteIndex];
+        }
+
+        private void UpdateStatusText()
+        {
+            if (_audioProcessor != null && StatusText != null)
+            {
+                string notation = GetMusicalNotation(_currentPitchSemitones);
+                string pitchText = _currentPitchSemitones >= 0 ? $"+{_currentPitchSemitones}" : _currentPitchSemitones.ToString();
+                StatusText.Text = $"Processing audio (Pitch: {pitchText} semitones / {notation})";
             }
         }
 
@@ -109,7 +117,7 @@ namespace AudioPitchShifter
             {
                 _audioProcessor = new AudioProcessor();
                 _audioProcessor.AudioLevelUpdated += AudioProcessor_AudioLevelUpdated;
-                _audioProcessor.Initialize(_selectedInputDevice, _selectedOutputDevice, _selectedLatencyPreset);
+                _audioProcessor.Initialize(_selectedInputDevice, _selectedOutputDevice, _lowLatencyPreset);
                 _audioProcessor.SetPitchSemiTones((float)PitchSlider.Value);
                 _audioProcessor.Start();
 
@@ -117,9 +125,8 @@ namespace AudioPitchShifter
                 StopButton.IsEnabled = true;
                 InputDeviceComboBox.IsEnabled = false;
                 OutputDeviceComboBox.IsEnabled = false;
-                LatencyPresetComboBox.IsEnabled = false;
 
-                StatusText.Text = $"Processing audio (Pitch: {PitchSlider.Value:+0;-0} semitones, {_selectedLatencyPreset.Name})";
+                UpdateStatusText();
 
                 _uiUpdateTimer?.Start();
             }
@@ -159,7 +166,6 @@ namespace AudioPitchShifter
             StopButton.IsEnabled = false;
             InputDeviceComboBox.IsEnabled = true;
             OutputDeviceComboBox.IsEnabled = true;
-            LatencyPresetComboBox.IsEnabled = true;
             AudioLevelBar.Value = 0;
 
             StatusText.Text = "Ready";
