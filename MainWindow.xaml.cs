@@ -111,7 +111,7 @@ namespace AudioPitchShifter
             }
         }
 
-        private void StartButton_Click(object sender, RoutedEventArgs e)
+        private void ToggleButton_Checked(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -121,8 +121,6 @@ namespace AudioPitchShifter
                 _audioProcessor.SetPitchSemiTones((float)PitchSlider.Value);
                 _audioProcessor.Start();
 
-                StartButton.IsEnabled = false;
-                StopButton.IsEnabled = true;
                 InputDeviceComboBox.IsEnabled = false;
                 OutputDeviceComboBox.IsEnabled = false;
 
@@ -133,8 +131,14 @@ namespace AudioPitchShifter
             catch (Exception ex)
             {
                 MessageBox.Show($"Error starting audio processing: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ToggleButton.IsChecked = false;
                 StopProcessing();
             }
+        }
+
+        private void ToggleButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            StopProcessing();
         }
 
         private void AudioProcessor_AudioLevelUpdated(object? sender, float level)
@@ -143,11 +147,6 @@ namespace AudioPitchShifter
             {
                 AudioLevelBar.Value = level;
             });
-        }
-
-        private void StopButton_Click(object sender, RoutedEventArgs e)
-        {
-            StopProcessing();
         }
 
         private void StopProcessing()
@@ -162,8 +161,6 @@ namespace AudioPitchShifter
                 _audioProcessor = null;
             }
 
-            StartButton.IsEnabled = true;
-            StopButton.IsEnabled = false;
             InputDeviceComboBox.IsEnabled = true;
             OutputDeviceComboBox.IsEnabled = true;
             AudioLevelBar.Value = 0;
