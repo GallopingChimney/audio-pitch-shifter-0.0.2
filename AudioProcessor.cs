@@ -22,7 +22,7 @@ namespace AudioPitchShifter
             _waveFormat = new WaveFormat(44100, 16, 2);
         }
 
-        public void Initialize(int inputDeviceNumber, int outputDeviceNumber)
+        public void Initialize(int inputDeviceNumber, int outputDeviceNumber, LatencyPreset preset)
         {
             Stop();
 
@@ -30,12 +30,11 @@ namespace AudioPitchShifter
             _soundTouch.Initialize((uint)_waveFormat.SampleRate, (uint)_waveFormat.Channels);
             _soundTouch.SetPitchSemiTonesChange(_pitchSemiTones);
 
-            // Optimized for low latency: 20ms input buffer, 50ms output buffer
             _waveIn = new WaveInEvent
             {
                 DeviceNumber = inputDeviceNumber,
                 WaveFormat = _waveFormat,
-                BufferMilliseconds = 20  // Minimum practical buffer size
+                BufferMilliseconds = preset.InputBufferMs
             };
 
             _bufferedWaveProvider = new BufferedWaveProvider(_waveFormat)
@@ -47,7 +46,7 @@ namespace AudioPitchShifter
             _waveOut = new WaveOutEvent
             {
                 DeviceNumber = outputDeviceNumber,
-                DesiredLatency = 50  // Low latency output
+                DesiredLatency = preset.OutputBufferMs
             };
 
             _waveIn.DataAvailable += OnDataAvailable;

@@ -12,6 +12,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -21,8 +23,11 @@
         <TextBlock Grid.Row="2" Text="Audio Output Device:" FontWeight="Bold" Margin="0,0,0,5"/>
         <ComboBox Grid.Row="3" x:Name="OutputDeviceComboBox" Margin="0,0,0,15" SelectionChanged="OutputDeviceComboBox_SelectionChanged"/>
 
-        <TextBlock Grid.Row="4" Text="Pitch Shift (Semitones):" FontWeight="Bold" Margin="0,0,0,5"/>
-        <Grid Grid.Row="5" Margin="0,0,0,20">
+        <TextBlock Grid.Row="4" Text="Latency Preset:" FontWeight="Bold" Margin="0,0,0,5"/>
+        <ComboBox Grid.Row="5" x:Name="LatencyPresetComboBox" Margin="0,0,0,15" SelectionChanged="LatencyPresetComboBox_SelectionChanged"/>
+
+        <TextBlock Grid.Row="6" Text="Pitch Shift (Semitones):" FontWeight="Bold" Margin="0,0,0,5"/>
+        <Grid Grid.Row="7" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -47,7 +52,7 @@
                        TextAlignment="Right"/>
         </Grid>
 
-        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
             <Button x:Name="StartButton"
                     Content="Start"
                     Width="100"
@@ -62,7 +67,7 @@
                     Click="StopButton_Click"/>
         </StackPanel>
 
-        <Border Grid.Row="7"
+        <Border Grid.Row="9"
                 BorderBrush="Gray"
                 BorderThickness="1"
                 CornerRadius="5"

@@ -11,12 +11,15 @@ namespace AudioPitchShifter
         private AudioProcessor? _audioProcessor;
         private int _selectedInputDevice = 0;
         private int _selectedOutputDevice = 0;
+        private LatencyPreset[] _latencyPresets = Array.Empty<LatencyPreset>();
+        private LatencyPreset _selectedLatencyPreset = null!;
         private System.Windows.Threading.DispatcherTimer? _uiUpdateTimer;
 
         public MainWindow()
         {
             InitializeComponent();
             LoadAudioDevices();
+            LoadLatencyPresets();
 
             _uiUpdateTimer = new System.Windows.Threading.DispatcherTimer
             {
@@ -56,6 +59,21 @@ namespace AudioPitchShifter
             }
         }
 
+        private void LoadLatencyPresets()
+        {
+            _latencyPresets = LatencyPreset.GetPresets();
+            LatencyPresetComboBox.Items.Clear();
+
+            foreach (var preset in _latencyPresets)
+            {
+                LatencyPresetComboBox.Items.Add(preset);
+            }
+
+            // Select "Low" by default (index 0)
+            LatencyPresetComboBox.SelectedIndex = 0;
+            _selectedLatencyPreset = _latencyPresets[0];
+        }
+
         private void InputDeviceComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedInputDevice = InputDeviceComboBox.SelectedIndex;
@@ -64,6 +82,14 @@ namespace AudioPitchShifter
         private void OutputDeviceComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedOutputDevice = OutputDeviceComboBox.SelectedIndex - 1;
+        }
+
+        private void LatencyPresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LatencyPresetComboBox.SelectedIndex >= 0)
+            {
+                _selectedLatencyPreset = _latencyPresets[LatencyPresetComboBox.SelectedIndex];
+            }
         }
 
         private void PitchSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -83,7 +109,7 @@ namespace AudioPitchShifter
             {
                 _audioProcessor = new AudioProcessor();
                 _audioProcessor.AudioLevelUpdated += AudioProcessor_AudioLevelUpdated;
-                _audioProcessor.Initialize(_selectedInputDevice, _selectedOutputDevice);
+                _audioProcessor.Initialize(_selectedInputDevice, _selectedOutputDevice, _selectedLatencyPreset);
                 _audioProcessor.SetPitchSemiTones((float)PitchSlider.Value);
                 _audioProcessor.Start();
 
@@ -91,8 +117,9 @@ namespace AudioPitchShifter
                 StopButton.IsEnabled = true;
                 InputDeviceComboBox.IsEnabled = false;
                 OutputDeviceComboBox.IsEnabled = false;
+                LatencyPresetComboBox.IsEnabled = false;
 
-                StatusText.Text = $"Processing audio (Pitch: {PitchSlider.Value:+0;-0} semitones)";
+                StatusText.Text = $"Processing audio (Pitch: {PitchSlider.Value:+0;-0} semitones, {_selectedLatencyPreset.Name})";
 
                 _uiUpdateTimer?.Start();
             }
@@ -132,6 +159,7 @@ namespace AudioPitchShifter
             StopButton.IsEnabled = false;
             InputDeviceComboBox.IsEnabled = true;
             OutputDeviceComboBox.IsEnabled = true;
+            LatencyPresetComboBox.IsEnabled = true;
             AudioLevelBar.Value = 0;
 
             StatusText.Text = "Ready";
