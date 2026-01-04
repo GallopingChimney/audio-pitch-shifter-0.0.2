@@ -49,6 +49,15 @@ namespace AudioPitchShifter
         [DllImport("SoundTouchDLL_x64.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "soundtouch_numUnprocessedSamples")]
         private static extern uint NumUnprocessedSamples(IntPtr handle);
 
+        [DllImport("SoundTouchDLL_x64.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "soundtouch_setSetting")]
+        private static extern int SetSetting(IntPtr handle, int settingId, int value);
+
+        // SoundTouch setting IDs
+        private const int SETTING_USE_AA_FILTER = 0;
+        private const int SETTING_SEQUENCE_MS = 2;
+        private const int SETTING_SEEKWINDOW_MS = 3;
+        private const int SETTING_OVERLAP_MS = 4;
+
         public SoundTouchInterop()
         {
             _handle = CreateInstance();
@@ -82,6 +91,12 @@ namespace AudioPitchShifter
         {
             SetSampleRate(_handle, sampleRate);
             SetChannels(_handle, channels);
+
+            // Enable high-quality settings for better frequency preservation
+            SetSetting(_handle, SETTING_USE_AA_FILTER, 1);     // Enable anti-alias filter for high freq preservation
+            SetSetting(_handle, SETTING_SEQUENCE_MS, 82);      // Default high-quality setting
+            SetSetting(_handle, SETTING_SEEKWINDOW_MS, 28);    // Default high-quality setting
+            SetSetting(_handle, SETTING_OVERLAP_MS, 12);       // Default high-quality setting
         }
 
         public void Process(float[] samples, uint numSamples)
