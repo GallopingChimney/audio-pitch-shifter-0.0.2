@@ -3,7 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Real-Time Pitch Shifter" Height="450" Width="390"
         Closing="Window_Closing"
-        Background="#1A1A1A">
+        Background="Transparent"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        AllowsTransparency="True">
     <Window.Resources>
         <!-- Gradient Brush for Spot Color -->
         <LinearGradientBrush x:Key="SpotGradient" StartPoint="0,0" EndPoint="1,0">
@@ -47,7 +50,7 @@
                     <Setter Property="Background" Value="#8B5CF6"/>
                     <Setter Property="BorderBrush" Value="#8B5CF6"/>
                     <Setter Property="Foreground" Value="White"/>
-                    <Setter Property="Content" Value="Start"/>
+                    <Setter Property="Content" Value="Start!"/>
                 </Trigger>
                 <!-- Checked (Stop) State - Dark Grey with Solid Purple Border -->
                 <Trigger Property="IsChecked" Value="True">
@@ -229,21 +232,113 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <!-- Outer Border for rounded corners and purple border -->
+    <Border BorderBrush="#8B5CF6" BorderThickness="1" CornerRadius="7" Background="#1A1A1A">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Audio Input Device:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#E0E0E0"/>
+            <!-- Custom Title Bar -->
+            <Border Grid.Row="0" Background="#4F3485" CornerRadius="5,5,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid>
+                    <TextBlock Text="Real-Time Pitch Shifter"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Left"
+                              Margin="10,0,0,0"
+                              Foreground="White"
+                              FontSize="13"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="MinimizeButton" Content="−" Width="46" Height="32"
+                               Background="Transparent" Foreground="White" BorderThickness="0"
+                               FontSize="18" Click="MinimizeButton_Click">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#DC143C"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button x:Name="MaximizeButton" Content="□" Width="46" Height="32"
+                               Background="Transparent" Foreground="White" BorderThickness="0"
+                               FontSize="19" Click="MaximizeButton_Click">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#DC143C"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button x:Name="CloseButton" Content="✕" Width="46" Height="32"
+                               Background="Transparent" Foreground="White" BorderThickness="0"
+                               FontSize="14" Click="CloseButton_Click">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="0,5,0,0">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#DC143C"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Main Content -->
+            <Grid Grid.Row="1" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Audio Input Device:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#E0E0E0"/>
         <ComboBox Grid.Row="1" x:Name="InputDeviceComboBox" Margin="0,0,0,15" SelectionChanged="InputDeviceComboBox_SelectionChanged"/>
 
         <TextBlock Grid.Row="2" Text="Audio Output Device:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#E0E0E0"/>
@@ -324,5 +419,7 @@
                 </TextBlock>
             </StackPanel>
         </Border>
-    </Grid>
+        </Grid>
+        </Grid>
+    </Border>
 </Window>
