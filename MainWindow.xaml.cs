@@ -201,7 +201,7 @@ namespace AudioPitchShifter
             else
             {
                 WindowState = WindowState.Maximized;
-                MaximizeButton.Content = "❐";
+                MaximizeButton.Content = "□";
             }
         }
 

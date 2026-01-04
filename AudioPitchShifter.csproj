@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="aps.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="SoundTouchDLL_x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
