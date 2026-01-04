@@ -19,7 +19,7 @@ namespace AudioPitchShifter
 
         public AudioProcessor()
         {
-            _waveFormat = new WaveFormat(44100, 16, 2);
+            _waveFormat = new WaveFormat(88200, 16, 2);
         }
 
         public void Initialize(int inputDeviceNumber, int outputDeviceNumber, LatencyPreset preset)
