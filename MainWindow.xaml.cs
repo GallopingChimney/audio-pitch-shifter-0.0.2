@@ -1,12 +1,31 @@
 using System;
+using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using NAudio.Wave;
 
 namespace AudioPitchShifter
 {
+    public class PercentageConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length == 2 && values[0] is double percentage && values[1] is double totalHeight)
+            {
+                return percentage * totalHeight;
+            }
+            return 0.0;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
     public partial class MainWindow : Window
     {
         private AudioProcessor? _audioProcessor;
@@ -15,11 +34,19 @@ namespace AudioPitchShifter
         private readonly LatencyPreset _lowLatencyPreset = new LatencyPreset("Low", 20, 100, "Optimized for quality");
         private System.Windows.Threading.DispatcherTimer? _uiUpdateTimer;
         private int _currentPitchSemitones = 0;
+        private ObservableCollection<double> _spectrumData = new ObservableCollection<double>();
 
         public MainWindow()
         {
             InitializeComponent();
             LoadAudioDevices();
+
+            // Initialize spectrum analyzer with 36 bars
+            for (int i = 0; i < 36; i++)
+            {
+                _spectrumData.Add(0.0);
+            }
+            SpectrumAnalyzer.ItemsSource = _spectrumData;
 
             _uiUpdateTimer = new System.Windows.Threading.DispatcherTimer
             {
@@ -118,6 +145,7 @@ namespace AudioPitchShifter
             {
                 _audioProcessor = new AudioProcessor();
                 _audioProcessor.AudioLevelUpdated += AudioProcessor_AudioLevelUpdated;
+                _audioProcessor.SpectrumDataUpdated += AudioProcessor_SpectrumDataUpdated;
                 _audioProcessor.Initialize(_selectedInputDevice, _selectedOutputDevice, _lowLatencyPreset);
                 _audioProcessor.SetPitchSemiTones((float)PitchSlider.Value);
                 _audioProcessor.Start();
@@ -150,6 +178,17 @@ namespace AudioPitchShifter
             });
         }
 
+        private void AudioProcessor_SpectrumDataUpdated(object? sender, float[] spectrum)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                for (int i = 0; i < spectrum.Length && i < _spectrumData.Count; i++)
+                {
+                    _spectrumData[i] = spectrum[i];
+                }
+            });
+        }
+
         private void StopProcessing()
         {
             _uiUpdateTimer?.Stop();
@@ -157,6 +196,7 @@ namespace AudioPitchShifter
             if (_audioProcessor != null)
             {
                 _audioProcessor.AudioLevelUpdated -= AudioProcessor_AudioLevelUpdated;
+                _audioProcessor.SpectrumDataUpdated -= AudioProcessor_SpectrumDataUpdated;
                 _audioProcessor.Stop();
                 _audioProcessor.Dispose();
                 _audioProcessor = null;
@@ -165,6 +205,12 @@ namespace AudioPitchShifter
             InputDeviceComboBox.IsEnabled = true;
             OutputDeviceComboBox.IsEnabled = true;
             AudioLevelBar.Value = 0;
+
+            // Reset spectrum analyzer
+            for (int i = 0; i < _spectrumData.Count; i++)
+            {
+                _spectrumData[i] = 0.0;
+            }
 
             StatusText.Text = "Ready";
         }
