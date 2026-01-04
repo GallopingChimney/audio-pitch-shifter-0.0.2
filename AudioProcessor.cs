@@ -19,7 +19,7 @@ namespace AudioPitchShifter
 
         public AudioProcessor()
         {
-            _waveFormat = new WaveFormat(88200, 16, 2);
+            _waveFormat = new WaveFormat(44100, 24, 2);
         }
 
         public void Initialize(int inputDeviceNumber, int outputDeviceNumber, LatencyPreset preset)
@@ -60,14 +60,18 @@ namespace AudioPitchShifter
 
             try
             {
-                int samplesRecorded = e.BytesRecorded / 2;
+                int bytesPerSample = _waveFormat.BitsPerSample / 8;
+                int samplesRecorded = e.BytesRecorded / bytesPerSample;
                 float[] floatSamples = new float[samplesRecorded];
 
-                // Convert samples outside the lock
+                // Convert 24-bit samples to float
                 for (int i = 0; i < samplesRecorded; i++)
                 {
-                    short sample = BitConverter.ToInt16(e.Buffer, i * 2);
-                    floatSamples[i] = sample / 32768f;
+                    int sample24 = e.Buffer[i * 3] | (e.Buffer[i * 3 + 1] << 8) | (e.Buffer[i * 3 + 2] << 16);
+                    // Sign-extend from 24-bit to 32-bit
+                    if ((sample24 & 0x800000) != 0)
+                        sample24 |= unchecked((int)0xFF000000);
+                    floatSamples[i] = sample24 / 8388608f; // 2^23
                 }
 
                 // Calculate level outside the lock
@@ -91,13 +95,15 @@ namespace AudioPitchShifter
 
                         if (receivedSamples > 0)
                         {
-                            byte[] outputBytes = new byte[receivedSamples * _waveFormat.Channels * 2];
+                            byte[] outputBytes = new byte[receivedSamples * _waveFormat.Channels * bytesPerSample];
+
                             for (int i = 0; i < receivedSamples * _waveFormat.Channels; i++)
                             {
-                                short sample = (short)(Math.Clamp(outputSamples[i], -1.0f, 1.0f) * 32767f);
-                                byte[] sampleBytes = BitConverter.GetBytes(sample);
-                                outputBytes[i * 2] = sampleBytes[0];
-                                outputBytes[i * 2 + 1] = sampleBytes[1];
+                                // Convert float to 24-bit integer
+                                int sample24 = (int)(Math.Clamp(outputSamples[i], -1.0f, 1.0f) * 8388607f);
+                                outputBytes[i * 3] = (byte)(sample24 & 0xFF);
+                                outputBytes[i * 3 + 1] = (byte)((sample24 >> 8) & 0xFF);
+                                outputBytes[i * 3 + 2] = (byte)((sample24 >> 16) & 0xFF);
                             }
 
                             _bufferedWaveProvider.AddSamples(outputBytes, 0, outputBytes.Length);
