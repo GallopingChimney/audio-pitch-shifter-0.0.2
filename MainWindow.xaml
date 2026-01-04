@@ -49,11 +49,11 @@
                     <Setter Property="Foreground" Value="White"/>
                     <Setter Property="Content" Value="Start"/>
                 </Trigger>
-                <!-- Checked (Stop) State - Dark Grey with Gradient Border -->
+                <!-- Checked (Stop) State - Dark Grey with Solid Purple Border -->
                 <Trigger Property="IsChecked" Value="True">
                     <Setter Property="Background" Value="#2A2A2A"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource SpotGradient}"/>
-                    <Setter Property="Foreground" Value="{StaticResource SpotGradient}"/>
+                    <Setter Property="BorderBrush" Value="#8B5CF6"/>
+                    <Setter Property="Foreground" Value="#8B5CF6"/>
                     <Setter Property="Content" Value="Stop"/>
                 </Trigger>
             </Style.Triggers>
@@ -65,11 +65,159 @@
             <Setter Property="Foreground" Value="#E0E0E0"/>
             <Setter Property="BorderBrush" Value="#404040"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                        Grid.Column="2"
+                                        Focusable="false"
+                                        IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                        ClickMode="Press"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="{TemplateBinding Background}"
+                                              BorderBrush="{TemplateBinding BorderBrush}"
+                                              BorderThickness="{TemplateBinding BorderThickness}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition Width="20" />
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter Grid.Column="0" Margin="5,3,0,3" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                                <Path Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M 0 0 L 4 4 L 8 0 Z" Fill="#E0E0E0"/>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter Name="ContentSite"
+                                            IsHitTestVisible="False"
+                                            Content="{TemplateBinding SelectionBoxItem}"
+                                            ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                            ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                            Margin="5,3,23,3"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Left">
+                            </ContentPresenter>
+                            <Popup Name="Popup"
+                                 Placement="Bottom"
+                                 IsOpen="{TemplateBinding IsDropDownOpen}"
+                                 AllowsTransparency="True"
+                                 Focusable="False"
+                                 PopupAnimation="Slide">
+                                <Grid Name="DropDown"
+                                    SnapsToDevicePixels="True"
+                                    MinWidth="{TemplateBinding ActualWidth}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder"
+                                          Background="#0D0D0D"
+                                          BorderThickness="1"
+                                          BorderBrush="#404040"/>
+                                    <ScrollViewer Margin="1" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" Background="#0D0D0D"/>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ComboBoxItem Style -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#0D0D0D"/>
+            <Setter Property="Padding" Value="5,3"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#2A2A2A"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#8B5CF6"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Slider Repeat Button Style (Must be defined before Slider Style) -->
+        <Style x:Key="SliderRepeatButtonStyle" TargetType="RepeatButton">
+            <Setter Property="SnapsToDevicePixels" Value="true"/>
+            <Setter Property="OverridesDefaultStyle" Value="true"/>
+            <Setter Property="IsTabStop" Value="false"/>
+            <Setter Property="Focusable" Value="false"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Border Background="Transparent"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Slider Thumb Style (Must be defined before Slider Style) -->
+        <Style x:Key="SliderThumbStyle" TargetType="Thumb">
+            <Setter Property="SnapsToDevicePixels" Value="true"/>
+            <Setter Property="OverridesDefaultStyle" Value="true"/>
+            <Setter Property="Height" Value="14"/>
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Ellipse Fill="#E0E0E0" Stroke="#8B5CF6" StrokeThickness="2"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Slider Style -->
         <Style TargetType="Slider">
             <Setter Property="Foreground" Value="{StaticResource SpotGradient}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TickBar x:Name="TopTick" Grid.Row="0" Fill="#2A2A2A" Height="4" Placement="Top" Visibility="Collapsed"/>
+                            <Border x:Name="TrackBackground" Grid.Row="1" Background="#404040" BorderBrush="#404040" BorderThickness="1" Height="4" Margin="5,0"/>
+                            <Track Grid.Row="1" x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge" Style="{StaticResource SliderRepeatButtonStyle}"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource SliderThumbStyle}"/>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge" Style="{StaticResource SliderRepeatButtonStyle}"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                            <TickBar x:Name="BottomTick" Grid.Row="2" Fill="#2A2A2A" Height="4" Placement="Bottom"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="TickPlacement" Value="TopLeft">
+                                <Setter TargetName="TopTick" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="BottomTick" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="TickPlacement" Value="BottomRight">
+                                <Setter TargetName="TopTick" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="BottomTick" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="TickPlacement" Value="Both">
+                                <Setter TargetName="TopTick" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="BottomTick" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- ProgressBar Style -->
@@ -138,9 +286,8 @@
         <ToggleButton Grid.Row="6"
                       x:Name="ToggleButton"
                       Style="{StaticResource ToggleButtonStyle}"
-                      Width="200"
                       Height="40"
-                      HorizontalAlignment="Center"
+                      HorizontalAlignment="Stretch"
                       Margin="0,0,0,20"
                       Checked="ToggleButton_Checked"
                       Unchecked="ToggleButton_Unchecked"/>

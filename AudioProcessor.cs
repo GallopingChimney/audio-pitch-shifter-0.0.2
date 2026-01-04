@@ -34,19 +34,23 @@ namespace AudioPitchShifter
             {
                 DeviceNumber = inputDeviceNumber,
                 WaveFormat = _waveFormat,
-                BufferMilliseconds = preset.InputBufferMs
+                BufferMilliseconds = preset.InputBufferMs,
+                NumberOfBuffers = 3 // Use more buffers to prevent glitches
             };
 
+            // Increase buffer to 4 seconds for smoother playback
             _bufferedWaveProvider = new BufferedWaveProvider(_waveFormat)
             {
-                BufferLength = _waveFormat.SampleRate * _waveFormat.Channels * 4 * 2,
-                DiscardOnBufferOverflow = true
+                BufferLength = _waveFormat.SampleRate * _waveFormat.Channels * sizeof(short) * 4,
+                DiscardOnBufferOverflow = true,
+                ReadFully = false // Don't wait for full buffer, helps reduce latency
             };
 
             _waveOut = new WaveOutEvent
             {
                 DeviceNumber = outputDeviceNumber,
-                DesiredLatency = preset.OutputBufferMs
+                DesiredLatency = preset.OutputBufferMs,
+                NumberOfBuffers = 3 // Use more buffers for stable playback
             };
 
             _waveIn.DataAvailable += OnDataAvailable;

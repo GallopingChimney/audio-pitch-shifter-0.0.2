@@ -11,7 +11,7 @@ namespace AudioPitchShifter
         private AudioProcessor? _audioProcessor;
         private int _selectedInputDevice = 0;
         private int _selectedOutputDevice = 0;
-        private readonly LatencyPreset _lowLatencyPreset = new LatencyPreset("Low", 10, 50, "Fast response");
+        private readonly LatencyPreset _lowLatencyPreset = new LatencyPreset("Low", 20, 100, "Optimized for quality");
         private System.Windows.Threading.DispatcherTimer? _uiUpdateTimer;
         private int _currentPitchSemitones = 0;
 
