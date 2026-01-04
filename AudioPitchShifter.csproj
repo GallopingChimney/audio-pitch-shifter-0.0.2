@@ -8,6 +8,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
+    <ApplicationIcon>aps.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
