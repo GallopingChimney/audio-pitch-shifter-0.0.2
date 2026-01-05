@@ -79,11 +79,9 @@ namespace AudioPitchShifter
                 }
 
                 // Calculate level outside the lock
-                float level = 0;
-                if (floatSamples.Length > 0)
-                {
-                    level = floatSamples.Max(Math.Abs);
-                }
+                float peak = floatSamples.Max(Math.Abs);
+                float dbValue = 20.0f * (float)Math.Log10(Math.Max(peak, 0.00001f));
+                float level = Math.Max(0.0f, Math.Min(1.0f, (dbValue + 60.0f) / 60.0f));
 
                 // Process audio with minimal lock time
                 lock (_lockObject)
