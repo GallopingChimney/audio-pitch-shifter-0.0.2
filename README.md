@@ -58,13 +58,8 @@ The .exe will automatically search for the VB-Audio driver on your system and wi
 3. **Adjust Pitch**: Use the slider to shift pitch in semitone intervals
    - Range: -12 to +12 semitones (one octave down to one octave up)
    - Each semitone is equivalent to one fret on a guitar
-4. **Adjust Latency**: Set the latency slider to control responsiveness
-   - Range: 20ms to 200ms
-   - Lower values = faster response, but may cause audio glitches on slower systems
-   - Higher values = more stable, but noticeable delay
-   - Recommended starting point: 50ms for most systems
-5. **Start Processing**: Click "Start" to begin real-time audio processing
-6. **Monitor Levels**: Watch the audio level meter to ensure proper signal
+4. **Start Processing**: Click "Start" to begin real-time audio processing
+5. **Monitor Levels**: Watch the audio level meter to ensure proper signal
 
 ## Common Use Cases
 
