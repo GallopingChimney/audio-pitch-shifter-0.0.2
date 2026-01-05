@@ -13,8 +13,9 @@
     <Window.Resources>
         <!-- Converters -->
         <local:PercentageConverter x:Key="PercentageConverter"/>
+        <local:SpectrumColorConverter x:Key="SpectrumColorConverter"/>
 
-        <!-- Gradient Brush for Spot Color -->
+        <!-- Gradient Brush for Spot Color (Audio Level Bar) -->
         <LinearGradientBrush x:Key="SpotGradient" StartPoint="0,0" EndPoint="1,0">
             <GradientStop Color="#000000" Offset="0.0"/>
             <GradientStop Color="#FF1493" Offset="0.2"/>
@@ -401,6 +402,7 @@
                       Checked="ToggleButton_Checked"
                       Unchecked="ToggleButton_Unchecked"/>
 
+        <!-- Status and Spectrum Analyzer Section -->
         <Border Grid.Row="7"
                 BorderBrush="#404040"
                 BorderThickness="1"
@@ -418,7 +420,23 @@
                             Maximum="1"
                             Value="0"/>
 
-                <TextBlock Text="Frequency Spectrum:" FontWeight="Bold" Margin="0,15,0,5" Foreground="#E0E0E0"/>
+                <!-- Spectrum Color Style Selection -->
+                <Grid Margin="0,15,0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Frequency Spectrum:" FontWeight="Bold" Foreground="#E0E0E0"/>
+                    <TextBlock Grid.Column="1" Text="Color Style:" FontWeight="Bold" Margin="20,0,5,0" HorizontalAlignment="Right" Foreground="#E0E0E0"/>
+                    <ComboBox Grid.Column="2" x:Name="SpectrumColorStyleComboBox" MinWidth="120" SelectionChanged="SpectrumColorStyleComboBox_SelectionChanged">
+                        <ComboBoxItem Content="Rainbow" IsSelected="True"/>
+                        <ComboBoxItem Content="Monochrome"/>
+                        <ComboBoxItem Content="Fire"/>
+                        <ComboBoxItem Content="Ocean"/>
+                    </ComboBox>
+                </Grid>
+                <!-- Spectrum Analyzer -->
                 <ItemsControl x:Name="SpectrumAnalyzer" Height="100">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -427,7 +445,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="1,0">
+                            <Grid Margin="1,0" x:Name="BarContainer">
                                 <Rectangle Fill="#404040" VerticalAlignment="Stretch"/>
                                 <Grid VerticalAlignment="Bottom">
                                     <Grid.Height>
@@ -436,7 +454,19 @@
                                             <Binding RelativeSource="{RelativeSource AncestorType=Grid}" Path="ActualHeight"/>
                                         </MultiBinding>
                                     </Grid.Height>
-                                    <Rectangle Fill="{StaticResource SpotGradient}"/>
+                                    <Rectangle>
+                                        <Rectangle.Fill>
+                                            <SolidColorBrush>
+                                                <SolidColorBrush.Color>
+                                                    <MultiBinding Converter="{StaticResource SpectrumColorConverter}">
+                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsControl}" Path="DataContext.SpectrumColorStyle"/>
+                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsControl}" Path="Items.Count"/>
+                                                        <Binding RelativeSource="{RelativeSource AncestorType=Grid, AncestorLevel=2}" Path="(ItemsControl.AlternationIndex)"/>
+                                                    </MultiBinding>
+                                                </SolidColorBrush.Color>
+                                            </SolidColorBrush>
+                                        </Rectangle.Fill>
+                                    </Rectangle>
                                 </Grid>
                             </Grid>
                         </DataTemplate>

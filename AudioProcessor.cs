@@ -187,7 +187,13 @@ namespace AudioPitchShifter
                 }
 
                 float avg = sum / (binEnd - binStart);
-                spectrum[band] = Math.Min(1.0f, avg * 20.0f); // Scale and clamp
+
+                // Apply logarithmic scaling to compress dynamic range
+                // Lower frequencies have more energy, so we compress them more
+                float dbValue = 20.0f * (float)Math.Log10(Math.Max(avg, 0.00001f));
+                float normalized = (dbValue + 60.0f) / 60.0f; // Map -60dB to 0dB -> 0 to 1
+
+                spectrum[band] = Math.Max(0.0f, Math.Min(1.0f, normalized)); // Clamp to 0-1
             }
 
             return spectrum;

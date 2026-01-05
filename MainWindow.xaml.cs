@@ -26,6 +26,103 @@ namespace AudioPitchShifter
             throw new NotImplementedException();
         }
     }
+
+    public class SpectrumColorConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length < 3) return System.Windows.Media.Colors.White;
+
+            string? colorStyle = values[0] as string;
+            int totalBars = values[1] is int total ? total : 36;
+            int barIndex = values[2] is int index ? index : 0;
+
+            float position = totalBars > 1 ? (float)barIndex / (totalBars - 1) : 0;
+
+            return colorStyle switch
+            {
+                "Rainbow" => GetRainbowColor(position),
+                "Monochrome" => GetMonochromeColor(position),
+                "Fire" => GetFireColor(position),
+                "Ocean" => GetOceanColor(position),
+                _ => GetRainbowColor(position)
+            };
+        }
+
+        private System.Windows.Media.Color GetRainbowColor(float position)
+        {
+            // HSV to RGB for rainbow effect
+            float hue = position * 300; // 0 to 300 degrees (red to blue)
+            return HsvToRgb(hue, 1.0f, 1.0f);
+        }
+
+        private System.Windows.Media.Color GetMonochromeColor(float position)
+        {
+            // Purple gradient
+            byte intensity = (byte)(100 + position * 155);
+            return System.Windows.Media.Color.FromRgb((byte)(intensity * 0.545f), (byte)(intensity * 0.36f), (byte)(intensity * 0.96f));
+        }
+
+        private System.Windows.Media.Color GetFireColor(float position)
+        {
+            // Black -> Red -> Orange -> Yellow -> White
+            if (position < 0.25f)
+            {
+                float t = position / 0.25f;
+                return System.Windows.Media.Color.FromRgb((byte)(t * 255), 0, 0);
+            }
+            else if (position < 0.5f)
+            {
+                float t = (position - 0.25f) / 0.25f;
+                return System.Windows.Media.Color.FromRgb(255, (byte)(t * 140), 0);
+            }
+            else if (position < 0.75f)
+            {
+                float t = (position - 0.5f) / 0.25f;
+                return System.Windows.Media.Color.FromRgb(255, (byte)(140 + t * 75), (byte)(t * 0));
+            }
+            else
+            {
+                float t = (position - 0.75f) / 0.25f;
+                return System.Windows.Media.Color.FromRgb(255, (byte)(215 + t * 40), (byte)(t * 255));
+            }
+        }
+
+        private System.Windows.Media.Color GetOceanColor(float position)
+        {
+            // Dark blue -> Cyan -> Light blue
+            byte r = (byte)(position * 100);
+            byte g = (byte)(100 + position * 155);
+            byte b = (byte)(200 + position * 55);
+            return System.Windows.Media.Color.FromRgb(r, g, b);
+        }
+
+        private System.Windows.Media.Color HsvToRgb(float h, float s, float v)
+        {
+            int hi = (int)(h / 60) % 6;
+            float f = h / 60 - (int)(h / 60);
+
+            byte vByte = (byte)(v * 255);
+            byte p = (byte)(v * (1 - s) * 255);
+            byte q = (byte)(v * (1 - f * s) * 255);
+            byte t = (byte)(v * (1 - (1 - f) * s) * 255);
+
+            return hi switch
+            {
+                0 => System.Windows.Media.Color.FromRgb(vByte, t, p),
+                1 => System.Windows.Media.Color.FromRgb(q, vByte, p),
+                2 => System.Windows.Media.Color.FromRgb(p, vByte, t),
+                3 => System.Windows.Media.Color.FromRgb(p, q, vByte),
+                4 => System.Windows.Media.Color.FromRgb(t, p, vByte),
+                _ => System.Windows.Media.Color.FromRgb(vByte, p, q)
+            };
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
     public partial class MainWindow : Window
     {
         private AudioProcessor? _audioProcessor;
@@ -35,11 +132,31 @@ namespace AudioPitchShifter
         private System.Windows.Threading.DispatcherTimer? _uiUpdateTimer;
         private int _currentPitchSemitones = 0;
         private ObservableCollection<double> _spectrumData = new ObservableCollection<double>();
+        private string _spectrumColorStyle = "Rainbow";
+
+        public string SpectrumColorStyle
+        {
+            get => _spectrumColorStyle;
+            set
+            {
+                _spectrumColorStyle = value;
+                // Force refresh of spectrum analyzer (only if it's initialized)
+                if (SpectrumAnalyzer != null)
+                {
+                    var temp = SpectrumAnalyzer.ItemsSource;
+                    SpectrumAnalyzer.ItemsSource = null;
+                    SpectrumAnalyzer.ItemsSource = temp;
+                }
+            }
+        }
 
         public MainWindow()
         {
             InitializeComponent();
             LoadAudioDevices();
+
+            // Set DataContext for bindings
+            DataContext = this;
 
             // Initialize spectrum analyzer with 36 bars
             for (int i = 0; i < 36; i++)
@@ -47,6 +164,7 @@ namespace AudioPitchShifter
                 _spectrumData.Add(0.0);
             }
             SpectrumAnalyzer.ItemsSource = _spectrumData;
+            SpectrumAnalyzer.AlternationCount = 36;
 
             _uiUpdateTimer = new System.Windows.Threading.DispatcherTimer
             {
@@ -254,6 +372,14 @@ namespace AudioPitchShifter
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void SpectrumColorStyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SpectrumColorStyleComboBox?.SelectedItem is ComboBoxItem item)
+            {
+                SpectrumColorStyle = item.Content.ToString() ?? "Rainbow";
+            }
         }
     }
 }
