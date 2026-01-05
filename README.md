@@ -17,7 +17,7 @@ A Windows application for real-time pitch shifting and tempo adjustment for guit
 
 - Windows 10 or later
 - .NET 8.0 Runtime
-- VB-Audio Virtual Cable (optional, for routing audio)
+- VB-Audio Virtual Cable (optional, for routing audio) - This will be automatically installed on the first run of the exe if it doesnt detect the drivers in your system.
 
 ## Building the Application
 
@@ -28,6 +28,12 @@ A Windows application for real-time pitch shifting and tempo adjustment for guit
    dotnet restore AudioPitchShifter.csproj
    dotnet build AudioPitchShifter.csproj -c Release
    ```
+
+## Downloading Pre-built Application
+
+1. If you don't want to build yourself, you can download and unzip the AudioPitchShifter_windows_x86-64.zip file from the repository.
+2. Unzip to any location.
+3. Run the AudioPitchShifter.exe executable file.
 
 ## Running the Application
 
@@ -40,6 +46,10 @@ Or use:
 ```
 dotnet run --project AudioPitchShifter.csproj
 ```
+### VB-Audio Cable
+AudioPitchShifter requires the VB-Audio driver pack by [V.Burel ©1998-2025](https://vb-audio.com/Cable/) to function properly. This is a donationware driver pack. Licensing information can be found [here](https://vb-audio.com/Services/licensing.htm).
+
+The .exe will automatically search for the VB-Audio driver on your system and will prompt you to auto-install for you in case it is not found.
 
 ## How to Use
 
