@@ -2,6 +2,9 @@
 
 A Windows application for real-time pitch shifting and tempo adjustment for guitar practice and audio playback.
 
+<img width="1021" height="647" alt="image" src="https://github.com/user-attachments/assets/f6568b8a-de82-4440-91da-4810e8994191" />
+
+
 ## Features
 
 - Real-time pitch shifting in semitone intervals (-12 to +12 semitones)
