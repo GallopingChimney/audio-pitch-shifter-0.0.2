@@ -65,11 +65,11 @@ dotnet run --project AudioPitchShifter.csproj
 ### Using VB-Audio Virtual Cable
 You can route audio from media players through the pitch shifter:
 
-1. Set your media player output to "VB-Audio Cable Input"
-2. In the pitch shifter, select "VB-Audio Cable Output" as input
+1. Set your Windows sound output to "CABLE / VB-Audio Cable Input"
+2. In the application, select "CABLE / VB-Audio Cable Output" as input
 3. Select your speakers/headphones as output
 4. Adjust pitch as desired
-5. Click Start and play your media
+5. Click Start and play your media.
 
 ## Pitch Shift Reference
 
@@ -89,12 +89,6 @@ You can route audio from media players through the pitch shifter:
 - Check that your audio devices are properly connected
 - Ensure the correct input/output devices are selected
 - Check Windows audio settings and volume levels
-
-### High Latency
-- Adjust the latency slider to find the sweet spot for your system
-- Start with 50ms and reduce if your system can handle it
-- Close other audio applications to reduce CPU load
-- Use an ASIO-compatible audio interface for even lower latency (requires NAudio.Asio package)
 
 ### Audio Distortion
 - Lower the input volume on your audio interface
