@@ -217,28 +217,24 @@ namespace AudioPitchShifter
 
         private void LoadAudioDevices()
         {
-            InputDeviceComboBox.Items.Clear();
-            for (int i = 0; i < WaveInEvent.DeviceCount; i++)
+            PopulateDeviceComboBox(InputDeviceComboBox, WaveInEvent.DeviceCount,
+                i => WaveInEvent.GetCapabilities(i).ProductName, 0, 0);
+            PopulateDeviceComboBox(OutputDeviceComboBox, WaveOut.DeviceCount,
+                i => WaveOut.GetCapabilities(i).ProductName, -1, 1);
+        }
+
+        private static void PopulateDeviceComboBox(ComboBox comboBox, int deviceCount,
+            Func<int, string> getDeviceName, int startIndex, int defaultSelection)
+        {
+            comboBox.Items.Clear();
+            for (int i = startIndex; i < deviceCount; i++)
             {
-                var capabilities = WaveInEvent.GetCapabilities(i);
-                InputDeviceComboBox.Items.Add($"{i}: {capabilities.ProductName}");
+                comboBox.Items.Add($"{i}: {getDeviceName(i)}");
             }
 
-            if (InputDeviceComboBox.Items.Count > 0)
+            if (comboBox.Items.Count > 0)
             {
-                InputDeviceComboBox.SelectedIndex = 0;
-            }
-
-            OutputDeviceComboBox.Items.Clear();
-            for (int i = -1; i < WaveOut.DeviceCount; i++)
-            {
-                var capabilities = WaveOut.GetCapabilities(i);
-                OutputDeviceComboBox.Items.Add($"{i}: {capabilities.ProductName}");
-            }
-
-            if (OutputDeviceComboBox.Items.Count > 0)
-            {
-                OutputDeviceComboBox.SelectedIndex = 1;
+                comboBox.SelectedIndex = defaultSelection;
             }
         }
 
@@ -394,16 +390,7 @@ namespace AudioPitchShifter
 
         private void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
-            if (WindowState == WindowState.Maximized)
-            {
-                WindowState = WindowState.Normal;
-                MaximizeButton.Content = "□";
-            }
-            else
-            {
-                WindowState = WindowState.Maximized;
-                MaximizeButton.Content = "□";
-            }
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)

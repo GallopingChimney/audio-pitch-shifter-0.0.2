@@ -67,21 +67,6 @@ namespace AudioPitchShifter
             }
         }
 
-        public void SetRateChange(float rateChange)
-        {
-            SetRate(_handle, rateChange);
-        }
-
-        public void SetTempoChange(float tempoChange)
-        {
-            SetTempo(_handle, tempoChange);
-        }
-
-        public void SetPitchChange(float pitch)
-        {
-            SetPitch(_handle, pitch);
-        }
-
         public void SetPitchSemiTonesChange(float semiTones)
         {
             SetPitchSemiTones(_handle, semiTones);
@@ -109,24 +94,9 @@ namespace AudioPitchShifter
             return ReceiveSamples(_handle, outBuffer, maxSamples);
         }
 
-        public void FlushBuffer()
-        {
-            Flush(_handle);
-        }
-
-        public void ClearBuffer()
-        {
-            Clear(_handle);
-        }
-
         public uint AvailableSamples()
         {
             return NumSamples(_handle);
-        }
-
-        public uint UnprocessedSamples()
-        {
-            return NumUnprocessedSamples(_handle);
         }
 
         public void Dispose()

@@ -16,7 +16,12 @@ namespace AudioPitchShifter
         private bool _isProcessing = false;
         private const int FFT_SIZE = 2048;
         private readonly float[] _fftBuffer = new float[FFT_SIZE];
+        private readonly float[] _hammingWindow = new float[FFT_SIZE];
         private int _fftPos = 0;
+
+        // Pre-allocated buffers to reduce GC pressure
+        private float[] _processingBuffer = Array.Empty<float>();
+        private byte[] _outputBuffer = Array.Empty<byte>();
 
         public event EventHandler<float>? AudioLevelUpdated;
         public event EventHandler<float[]>? SpectrumDataUpdated;
@@ -24,6 +29,12 @@ namespace AudioPitchShifter
         public AudioProcessor()
         {
             _waveFormat = new WaveFormat(44100, 24, 2);
+
+            // Pre-compute Hamming window coefficients for performance
+            for (int i = 0; i < FFT_SIZE; i++)
+            {
+                _hammingWindow[i] = 0.54f - 0.46f * (float)Math.Cos(2.0 * Math.PI * i / (FFT_SIZE - 1));
+            }
         }
 
         public void Initialize(int inputDeviceNumber, int outputDeviceNumber, LatencyPreset preset)
@@ -92,23 +103,33 @@ namespace AudioPitchShifter
                     uint availableSamples = _soundTouch.AvailableSamples();
                     if (availableSamples > 0)
                     {
-                        float[] outputSamples = new float[availableSamples * _waveFormat.Channels];
-                        uint receivedSamples = _soundTouch.Receive(outputSamples, availableSamples);
+                        // Reuse or resize buffer if needed
+                        int requiredFloatSize = (int)(availableSamples * _waveFormat.Channels);
+                        if (_processingBuffer.Length < requiredFloatSize)
+                        {
+                            _processingBuffer = new float[requiredFloatSize];
+                        }
+
+                        uint receivedSamples = _soundTouch.Receive(_processingBuffer, availableSamples);
 
                         if (receivedSamples > 0)
                         {
-                            byte[] outputBytes = new byte[receivedSamples * _waveFormat.Channels * bytesPerSample];
+                            int requiredByteSize = (int)(receivedSamples * _waveFormat.Channels * bytesPerSample);
+                            if (_outputBuffer.Length < requiredByteSize)
+                            {
+                                _outputBuffer = new byte[requiredByteSize];
+                            }
 
                             for (int i = 0; i < receivedSamples * _waveFormat.Channels; i++)
                             {
                                 // Convert float to 24-bit integer
-                                int sample24 = (int)(Math.Clamp(outputSamples[i], -1.0f, 1.0f) * 8388607f);
-                                outputBytes[i * 3] = (byte)(sample24 & 0xFF);
-                                outputBytes[i * 3 + 1] = (byte)((sample24 >> 8) & 0xFF);
-                                outputBytes[i * 3 + 2] = (byte)((sample24 >> 16) & 0xFF);
+                                int sample24 = (int)(Math.Clamp(_processingBuffer[i], -1.0f, 1.0f) * 8388607f);
+                                _outputBuffer[i * 3] = (byte)(sample24 & 0xFF);
+                                _outputBuffer[i * 3 + 1] = (byte)((sample24 >> 8) & 0xFF);
+                                _outputBuffer[i * 3 + 2] = (byte)((sample24 >> 16) & 0xFF);
                             }
 
-                            _bufferedWaveProvider.AddSamples(outputBytes, 0, outputBytes.Length);
+                            _bufferedWaveProvider.AddSamples(_outputBuffer, 0, requiredByteSize);
                         }
                     }
                 }
@@ -147,18 +168,19 @@ namespace AudioPitchShifter
             const int NUM_BANDS = 36;
             float[] spectrum = new float[NUM_BANDS];
 
-            // Apply Hamming window
+            // Apply pre-computed Hamming window
             float[] windowed = new float[FFT_SIZE];
             for (int i = 0; i < FFT_SIZE; i++)
             {
-                windowed[i] = buffer[i] * (0.54f - 0.46f * (float)Math.Cos(2.0 * Math.PI * i / (FFT_SIZE - 1)));
+                windowed[i] = buffer[i] * _hammingWindow[i];
             }
 
-            // Perform FFT (simplified - using magnitude calculation)
+            // Perform FFT with windowed data
             Complex[] fftResult = new Complex[FFT_SIZE];
             for (int i = 0; i < FFT_SIZE; i++)
             {
-                fftResult[i] = new Complex(windowed[i], 0);
+                fftResult[i].Real = windowed[i];
+                fftResult[i].Imaginary = 0;
             }
 
             FFT(fftResult, FFT_SIZE);

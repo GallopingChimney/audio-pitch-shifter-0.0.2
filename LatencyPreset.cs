@@ -19,16 +19,5 @@ namespace AudioPitchShifter
         {
             return $"{Name} (~{InputBufferMs + OutputBufferMs}ms total)";
         }
-
-        public static LatencyPreset[] GetPresets()
-        {
-            return new[]
-            {
-                // new LatencyPreset("Low", 20, 50, "Fast response - recommended"),
-                new LatencyPreset("Low", 10, 50, "Fast response - recommended"),
-                new LatencyPreset("Medium", 30, 70, "Balanced - good for most systems"),
-                new LatencyPreset("High", 40, 100, "Most stable - highest compatibility")
-            };
-        }
     }
 }

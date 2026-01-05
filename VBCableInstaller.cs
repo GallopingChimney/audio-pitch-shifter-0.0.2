@@ -17,7 +17,6 @@ namespace AudioPitchShifter
         {
             try
             {
-                // Check both 32-bit and 64-bit registry locations
                 return CheckRegistryPath(Registry.LocalMachine, DriverRegistryPath) ||
                        CheckRegistryPath(Registry.LocalMachine, DriverRegistryPath64);
             }
