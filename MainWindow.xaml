@@ -13,7 +13,7 @@
     <Window.Resources>
         <!-- Converters -->
         <local:PercentageConverter x:Key="PercentageConverter"/>
-        <local:SpectrumColorConverter x:Key="SpectrumColorConverter"/>
+        <local:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
 
         <!-- Gradient Brush for Spot Color (Audio Level Bar) -->
         <LinearGradientBrush x:Key="SpotGradient" StartPoint="0,0" EndPoint="1,0">
@@ -445,28 +445,16 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="1,0" x:Name="BarContainer">
+                            <Grid Margin="1,0">
                                 <Rectangle Fill="#404040" VerticalAlignment="Stretch"/>
                                 <Grid VerticalAlignment="Bottom">
                                     <Grid.Height>
                                         <MultiBinding Converter="{StaticResource PercentageConverter}">
-                                            <Binding/>
+                                            <Binding Path="Value"/>
                                             <Binding RelativeSource="{RelativeSource AncestorType=Grid}" Path="ActualHeight"/>
                                         </MultiBinding>
                                     </Grid.Height>
-                                    <Rectangle>
-                                        <Rectangle.Fill>
-                                            <SolidColorBrush>
-                                                <SolidColorBrush.Color>
-                                                    <MultiBinding Converter="{StaticResource SpectrumColorConverter}">
-                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsControl}" Path="DataContext.SpectrumColorStyle"/>
-                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsControl}" Path="Items.Count"/>
-                                                        <Binding RelativeSource="{RelativeSource AncestorType=Grid, AncestorLevel=2}" Path="(ItemsControl.AlternationIndex)"/>
-                                                    </MultiBinding>
-                                                </SolidColorBrush.Color>
-                                            </SolidColorBrush>
-                                        </Rectangle.Fill>
-                                    </Rectangle>
+                                    <Rectangle Fill="{Binding Color, Converter={StaticResource ColorToBrushConverter}}"/>
                                 </Grid>
                             </Grid>
                         </DataTemplate>

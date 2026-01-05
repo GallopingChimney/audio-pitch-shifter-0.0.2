@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -10,6 +11,38 @@ using NAudio.Wave;
 
 namespace AudioPitchShifter
 {
+    public class SpectrumBar : INotifyPropertyChanged
+    {
+        private double _value;
+        private System.Windows.Media.Color _color;
+
+        public double Value
+        {
+            get => _value;
+            set
+            {
+                _value = value;
+                OnPropertyChanged(nameof(Value));
+            }
+        }
+
+        public System.Windows.Media.Color Color
+        {
+            get => _color;
+            set
+            {
+                _color = value;
+                OnPropertyChanged(nameof(Color));
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
     public class PercentageConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
@@ -27,19 +60,56 @@ namespace AudioPitchShifter
         }
     }
 
-    public class SpectrumColorConverter : IMultiValueConverter
+    public class ColorToBrushConverter : IValueConverter
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (values.Length < 3) return System.Windows.Media.Colors.White;
+            if (value is System.Windows.Media.Color color)
+            {
+                return new System.Windows.Media.SolidColorBrush(color);
+            }
+            return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White);
+        }
 
-            string? colorStyle = values[0] as string;
-            int totalBars = values[1] is int total ? total : 36;
-            int barIndex = values[2] is int index ? index : 0;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public partial class MainWindow : Window
+    {
+        private AudioProcessor? _audioProcessor;
+        private int _selectedInputDevice = 0;
+        private int _selectedOutputDevice = 0;
+        private readonly LatencyPreset _lowLatencyPreset = new LatencyPreset("Low", 20, 100, "Optimized for quality");
+        private System.Windows.Threading.DispatcherTimer? _uiUpdateTimer;
+        private int _currentPitchSemitones = 0;
+        private ObservableCollection<SpectrumBar> _spectrumData = new ObservableCollection<SpectrumBar>();
+        private string _spectrumColorStyle = "Rainbow";
 
-            float position = totalBars > 1 ? (float)barIndex / (totalBars - 1) : 0;
+        public string SpectrumColorStyle
+        {
+            get => _spectrumColorStyle;
+            set
+            {
+                _spectrumColorStyle = value;
+                UpdateSpectrumColors();
+            }
+        }
 
-            return colorStyle switch
+        private void UpdateSpectrumColors()
+        {
+            for (int i = 0; i < _spectrumData.Count; i++)
+            {
+                _spectrumData[i].Color = GetColorForBar(i, _spectrumData.Count);
+            }
+        }
+
+        private System.Windows.Media.Color GetColorForBar(int index, int totalBars)
+        {
+            float position = totalBars > 1 ? (float)index / (totalBars - 1) : 0;
+
+            return _spectrumColorStyle switch
             {
                 "Rainbow" => GetRainbowColor(position),
                 "Monochrome" => GetMonochromeColor(position),
@@ -51,21 +121,18 @@ namespace AudioPitchShifter
 
         private System.Windows.Media.Color GetRainbowColor(float position)
         {
-            // HSV to RGB for rainbow effect
-            float hue = position * 300; // 0 to 300 degrees (red to blue)
+            float hue = position * 300;
             return HsvToRgb(hue, 1.0f, 1.0f);
         }
 
         private System.Windows.Media.Color GetMonochromeColor(float position)
         {
-            // Purple gradient
             byte intensity = (byte)(100 + position * 155);
             return System.Windows.Media.Color.FromRgb((byte)(intensity * 0.545f), (byte)(intensity * 0.36f), (byte)(intensity * 0.96f));
         }
 
         private System.Windows.Media.Color GetFireColor(float position)
         {
-            // Black -> Red -> Orange -> Yellow -> White
             if (position < 0.25f)
             {
                 float t = position / 0.25f;
@@ -90,7 +157,6 @@ namespace AudioPitchShifter
 
         private System.Windows.Media.Color GetOceanColor(float position)
         {
-            // Dark blue -> Cyan -> Light blue
             byte r = (byte)(position * 100);
             byte g = (byte)(100 + position * 155);
             byte b = (byte)(200 + position * 55);
@@ -118,38 +184,6 @@ namespace AudioPitchShifter
             };
         }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-    public partial class MainWindow : Window
-    {
-        private AudioProcessor? _audioProcessor;
-        private int _selectedInputDevice = 0;
-        private int _selectedOutputDevice = 0;
-        private readonly LatencyPreset _lowLatencyPreset = new LatencyPreset("Low", 20, 100, "Optimized for quality");
-        private System.Windows.Threading.DispatcherTimer? _uiUpdateTimer;
-        private int _currentPitchSemitones = 0;
-        private ObservableCollection<double> _spectrumData = new ObservableCollection<double>();
-        private string _spectrumColorStyle = "Rainbow";
-
-        public string SpectrumColorStyle
-        {
-            get => _spectrumColorStyle;
-            set
-            {
-                _spectrumColorStyle = value;
-                // Force refresh of spectrum analyzer (only if it's initialized)
-                if (SpectrumAnalyzer != null)
-                {
-                    var temp = SpectrumAnalyzer.ItemsSource;
-                    SpectrumAnalyzer.ItemsSource = null;
-                    SpectrumAnalyzer.ItemsSource = temp;
-                }
-            }
-        }
-
         public MainWindow()
         {
             InitializeComponent();
@@ -161,10 +195,13 @@ namespace AudioPitchShifter
             // Initialize spectrum analyzer with 36 bars
             for (int i = 0; i < 36; i++)
             {
-                _spectrumData.Add(0.0);
+                _spectrumData.Add(new SpectrumBar
+                {
+                    Value = 0.0,
+                    Color = GetColorForBar(i, 36)
+                });
             }
             SpectrumAnalyzer.ItemsSource = _spectrumData;
-            SpectrumAnalyzer.AlternationCount = 36;
 
             _uiUpdateTimer = new System.Windows.Threading.DispatcherTimer
             {
@@ -302,7 +339,7 @@ namespace AudioPitchShifter
             {
                 for (int i = 0; i < spectrum.Length && i < _spectrumData.Count; i++)
                 {
-                    _spectrumData[i] = spectrum[i];
+                    _spectrumData[i].Value = spectrum[i];
                 }
             });
         }
@@ -327,7 +364,7 @@ namespace AudioPitchShifter
             // Reset spectrum analyzer
             for (int i = 0; i < _spectrumData.Count; i++)
             {
-                _spectrumData[i] = 0.0;
+                _spectrumData[i].Value = 0.0;
             }
 
             StatusText.Text = "Ready";
