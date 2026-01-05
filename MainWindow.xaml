@@ -232,18 +232,39 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="{TemplateBinding Tag}">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#DC143C"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#DC143C"/>
-                </Trigger>
-            </Style.Triggers>
+        </Style>
+
+        <!-- Close Button Style with Rounded Corner -->
+        <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="0,5,0,0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#DC143C"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
@@ -278,16 +299,10 @@
                                 FontSize="18"
                                 Style="{StaticResource TitleBarButtonStyle}"
                                 Click="MinimizeButton_Click"/>
-                        <Button x:Name="MaximizeButton"
-                                Content="□"
-                                FontSize="19"
-                                Style="{StaticResource TitleBarButtonStyle}"
-                                Click="MaximizeButton_Click"/>
                         <Button x:Name="CloseButton"
                                 Content="✕"
                                 FontSize="14"
-                                Tag="0,5,0,0"
-                                Style="{StaticResource TitleBarButtonStyle}"
+                                Style="{StaticResource CloseButtonStyle}"
                                 Click="CloseButton_Click"/>
                     </StackPanel>
                 </Grid>
